@@ -1,6 +1,6 @@
 export HF_HUB_DISABLE_PROGRESS_BARS=1
 export HF_HOME=.hf_cache
-export HF_HUB_OFFLINE=0
+export HF_HUB_OFFLINE=1
 
 install:
 	@echo " + Installing dependencies..."
@@ -9,6 +9,10 @@ install:
 	@echo "   - Creating a virtual env"
 	@uv venv --python 3.13
 	@echo "   - Installing dependencies"
+	@uv -n sync
+
+refresh: .venv
+	@echo " + Refreshing dependencies..."
 	@uv -n sync
 
 run:
