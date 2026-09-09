@@ -2,7 +2,7 @@ from typing import Annotated
 import pydantic as pd
 
 
-class FunctionDefinition(pd.BaseModel):
+class FnDef(pd.BaseModel):
     name: Annotated[
         str,
         pd.Field(min_length=3, pattern=r"^[a-zA-Z_][a-zA-Z0-9_]*$")
@@ -30,10 +30,10 @@ class FunctionDefinition(pd.BaseModel):
         return f"{self.name} with {param}: {self.description}"
 
     @staticmethod
-    def parse_json(file: str) -> list["FunctionDefinition"]:
+    def parse_json(file: str) -> list["FnDef"]:
         try:
             with open(file, mode="r") as f:
-                adapter = pd.TypeAdapter(list[FunctionDefinition])
+                adapter = pd.TypeAdapter(list[FnDef])
                 return adapter.validate_json(f.read())
         except pd.ValidationError as error:
             print("ERROR: ", error)

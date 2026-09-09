@@ -8,7 +8,7 @@ class Model:
         self._merge_file: str = self._model.get_path_to_merges_file()
         self._tokenizer_file: str = self._model.get_path_to_tokenizer_file()
 
-    def encode(self, text: str) -> ...:
+    def encode(self, text: str) -> list[int]:
         tensor: list[list[int]] = self._model.encode(text).tolist()
         return tensor[0]
 

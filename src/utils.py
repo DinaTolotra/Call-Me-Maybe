@@ -21,3 +21,12 @@ def index_sort(l: list[float], count: int) -> list[tuple[int, float]]:
             res.append((max_index, max_value))
             l[max_index] = -float_info.max
     return res
+
+def filter_proba(proba: list[float], allowed: set[int]) -> list[float]:
+    res = list[float]()
+    for i in range(len(proba)):
+        val = proba[i]
+        if i not in allowed:
+            val = 0.
+        res.append(val)
+    return res
