@@ -1,61 +1,59 @@
-from .llm_model import Model
-from .utils import softmax
-from .utils import index_sort
-from .utils import filter_proba
-from .model import FnDef, Prompt
-from .tree import Node, print_tree
+from string import digits
 
+from src.llm_model import Model
+from src.utils import softmax, filter_proba, index_sort
+from src.model import FnDef
+import src.fsm as fsm
 
-def infer(
-        model: Model,
-        prompt_token: list[int],
-        allowed_token: set[int]
-        ) -> tuple[int, float]:
-    proba = softmax(model.infer(prompt_token))
-    filtered_proba = filter_proba(proba, set(allowed_token))
-    sample = index_sort(filtered_proba, 1)
-    return sample[0]
-
-
-def generate_path(root: Node, data: list[int]) -> None:
-    if len(data) == 0:
-        return
-    token = data[0]
-
-    node = root[token]
-    if not root.has(token):
-        node = root.add_child(token)
-    generate_path(node, data[1:])
-
-
-def generate_descision_tree(
-        model: Model,
-        choice: list[str]
-        ) -> Node:
-    root = Node(-1)
-    for opt in choice:
-        opt_token = model.encode(opt)
-        generate_path(root, opt_token)
-    return root
-
-
+print(" + Initialising data...")
 model = Model()
+fn_list = FnDef.parse_json("data/input/functions_definition.json")
+prompt = """\
 
-print(" + Data initialisation...")
-prompt = "How a programmer greet? Hello "
+instruction:
+{instruction}
+
+function list:
+{function_list}
+
+output example:
+fn_print_hello;
+
+corresponding function:
+
+"""
+prompt = prompt.format(
+	function_list = "\n".join([str(fn) for fn in fn_list]),
+	instruction = "Replace all numbers in \"Hello 34 I'm 233 years old\" with NUMBERS"
+)
+
+print("  - Initializing token...")
 prompt_token = model.encode(prompt)
-allowed_word = ["world", "everybody", "everyone", "fucker"]
-descision_tree = generate_descision_tree(model, allowed_word)
+fn_name_token = list[int]()
+ending_token = list[int]()
+for fn in fn_list:
+	token = model.encode(fn.name)
+	fn_name_token.extend(token)
+ending_token.extend(model.encode(";"))
 
-print(f"  - Prompt: [{prompt}] = {prompt_token}")
+print("  - Initializing FSM...")
+table = fsm.TransitionTable()
+table.add_transition(
+	fsm.State.GENERATING,
+	fsm.State.GENERATING,
+	set(fn_name_token)
+)
+table.add_transition(
+	fsm.State.GENERATING,
+	fsm.State.STOPING,
+	set(ending_token)
+)
 
-print(" + Running the model...")
-node = descision_tree
-result = list[int]()
-while node.get_children_count() > 0:
-    allowed_token = node.get_token_option()
-    token, proba = infer(model, prompt_token + result, allowed_token)
-    result.append(token)
-    node = node[token]
-
-print(f"  - Result: [{prompt}{model.decode(result)}]")
+print(" + Launching inference...")
+grammar = fsm.Grammar(table, fsm.State.GENERATING)
+while grammar.state != fsm.State.STOPING:
+	proba = softmax(model.infer(prompt_token + grammar.result))
+	sample = index_sort(filter_proba(proba, grammar.possible_token), 1)
+	print(f"  - Sample: [{model.decode([sample[0][0]])}]")
+	grammar.consume(sample[0][0])
+print(model.decode(grammar.result))
