@@ -24,7 +24,7 @@ corresponding function:
 """
 prompt = prompt.format(
 	function_list = "\n".join([str(fn) for fn in fn_list]),
-	instruction = "Replace all numbers in \"Hello 34 I'm 233 years old\" with NUMBERS"
+	instruction = "Calculate the square root of 144"
 )
 
 print("  - Initializing token...")
@@ -38,20 +38,22 @@ ending_token.extend(model.encode(";"))
 
 print("  - Initializing FSM...")
 table = fsm.TransitionTable()
+generating = fsm.State("generating")
+stoping = fsm.State("stoping")
 table.add_transition(
-	fsm.State.GENERATING,
-	fsm.State.GENERATING,
+	generating,
+	generating,
 	set(fn_name_token)
 )
 table.add_transition(
-	fsm.State.GENERATING,
-	fsm.State.STOPING,
+	generating,
+	stoping,
 	set(ending_token)
 )
 
 print(" + Launching inference...")
-grammar = fsm.Grammar(table, fsm.State.GENERATING)
-while grammar.state != fsm.State.STOPING:
+grammar = fsm.Grammar(table, generating)
+while grammar.state != stoping:
 	proba = softmax(model.infer(prompt_token + grammar.result))
 	sample = index_sort(filter_proba(proba, grammar.possible_token), 1)
 	print(f"  - Sample: [{model.decode([sample[0][0]])}]")

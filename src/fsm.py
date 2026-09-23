@@ -1,13 +1,21 @@
-from enum import Enum, auto
-
-
 t_token_set = set[int]
 
 
-class State(Enum):
-    GENERATING = auto()
-    STOPING = auto()
+class State:
+    def __init__(self, name: str) -> None:
+        self._name = name
 
+    @property
+    def name(self) -> str:
+        return self._name
+
+    def __eq__(self, value: object) -> bool:
+        if isinstance(value, State):
+            return self.name == value.name
+        return False
+
+    def __hash__(self) -> int:
+        return hash(self.name)
 
 class TransitionTable:
     def __init__(self) -> None:
