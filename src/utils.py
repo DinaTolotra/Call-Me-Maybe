@@ -1,3 +1,4 @@
+from typing import Generator, Any
 from sys import float_info
 import numpy as np
 
@@ -30,3 +31,7 @@ def filter_proba(proba: list[float], allowed: set[int]) -> list[float]:
             val = 0.
         res.append(val)
     return res
+
+def batched(l: list[Any], batch_size: int) -> Generator[list[Any], None, None]:
+    for i in range(0, len(l), batch_size):
+        yield l[i:min(len(l), i + batch_size)]
