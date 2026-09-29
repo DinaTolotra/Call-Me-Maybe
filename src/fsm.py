@@ -17,6 +17,7 @@ class State:
     def __hash__(self) -> int:
         return hash(self.name)
 
+# TODO: transition rule can be modified
 class TransitionTable:
     def __init__(self) -> None:
         self._table: dict[

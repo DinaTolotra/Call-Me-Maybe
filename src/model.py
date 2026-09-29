@@ -37,6 +37,8 @@ class FnDef(pd.BaseModel):
                 return adapter.validate_json(f.read())
         except pd.ValidationError as error:
             print("ERROR: ", error)
+        except Exception as error:
+            print("ERROR: ", error)
         return []
 
 
@@ -51,4 +53,23 @@ class Prompt(pd.BaseModel):
                 return adapter.validate_json(f.read())
         except pd.ValidationError as error:
             print("ERROR: ", error)
+        except Exception as error:
+            print("ERROR: ", error)
         return []
+
+
+class Template(pd.BaseModel):
+    name: Annotated[str, pd.Field(min_length=1)]
+    value: Annotated[str, pd.Field(min_length=1)]
+
+    @staticmethod
+    def parse_json(file: str) -> dict[str, "Template"]:
+        try:
+            with open(file, mode="r") as f:
+                adapter = pd.TypeAdapter(dict[str, Template])
+                return adapter.validate_json(f.read())
+        except pd.ValidationError as error:
+            print("ERROR: ", error)
+        except Exception as error:
+            print("ERROR: ", error)
+        return {}
