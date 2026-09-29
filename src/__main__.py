@@ -12,24 +12,16 @@ BATCH_SIZE = 3
 REQUEST_INDEX = 10
 
 
-print(" + Initialising data...")
-model = Model()
-request_list = Prompt.parse_json("data/input/function_calling_tests.json")
-fn_list = FnDef.parse_json("data/input/functions_definition.json")
-template_dict = Template.parse_json("data/template/prompt.json")
-
-state = {
-    "generating": fsm.State("generating"),
-    "stoping": fsm.State("stoping")
-}
-
-batch_result = []
-for fn_batch in utils.batched(fn_list, BATCH_SIZE):
+def get_function_in_batch(model: Model, request: str, prompt_template: str, fn_batch):
     fn_dict = dict[str, FnDef]()
     fn_id_token_set = {*model.encode(f"0")}
     for i in range(1, len(fn_batch) + 1):
         fn_dict[f"{i};"] = fn_batch[i - 1]
         fn_id_token_set = fn_id_token_set.union(model.encode(f"{i}"))
+    state = {
+        "generating": fsm.State("generating"),
+        "stoping": fsm.State("stoping")
+    }
     table = fsm.TransitionTable()
     grammar = fsm.Grammar(table, state["generating"])
     table.add_transition(
@@ -42,9 +34,8 @@ for fn_batch in utils.batched(fn_list, BATCH_SIZE):
         state["stoping"],
         set(model.encode(";"))
     )
-    prompt_template = template_dict["function_name"]
-    prompt = prompt_template.value.format(
-        instruction = request_list[REQUEST_INDEX],
+    prompt = prompt_template.format(
+        instruction = request,
         function_list = "\n".join([
             f"F{i}; {str(fn)}" for i, fn in enumerate(fn_batch, 1)
         ])
@@ -59,43 +50,31 @@ for fn_batch in utils.batched(fn_list, BATCH_SIZE):
         grammar.consume(token)
         proba_list.append(_)
     fn = fn_dict.get(model.decode(grammar.result))
+    return fn
+
+
+print(" + Initialising data...")
+model = Model()
+request_list = Prompt.parse_json("data/input/function_calling_tests.json")
+fn_list = FnDef.parse_json("data/input/functions_definition.json")
+template_dict = Template.parse_json("data/template/prompt.json")
+
+batch_result = []
+for fn_batch in utils.batched(fn_list, BATCH_SIZE):
+    fn = get_function_in_batch(
+        model,
+        request_list[REQUEST_INDEX].prompt,
+        template_dict["function_name"].value,
+        fn_batch
+    )
     if fn:
         batch_result.append(fn)
 
-fn_batch = batch_result
-fn_dict = dict[str, FnDef]()
-fn_id_token_set = {*model.encode(f"0")}
-for i in range(1, len(fn_batch) + 1):
-    fn_dict[f"{i};"] = fn_batch[i - 1]
-    fn_id_token_set = fn_id_token_set.union(model.encode(f"{i}"))
-table = fsm.TransitionTable()
-grammar = fsm.Grammar(table, state["generating"])
-table.add_transition(
-    state["generating"],
-    state["generating"],
-    fn_id_token_set
+fn = get_function_in_batch(
+    model,
+    request_list[REQUEST_INDEX].prompt,
+    template_dict["function_name"].value,
+    batch_result
 )
-table.add_transition(
-    state["generating"],
-    state["stoping"],
-    set(model.encode(";"))
-)
-prompt_template = template_dict["function_name"]
-prompt = prompt_template.value.format(
-    instruction = request_list[REQUEST_INDEX],
-    function_list = "\n".join([
-        f"F{i}; {str(fn)}" for i, fn in enumerate(fn_batch, 1)
-    ])
-)
-prompt_token = model.encode(prompt)
-proba_list = []
-while grammar.state != state["stoping"]:
-    logit = model.infer(prompt_token + grammar.result)
-    proba = utils.filter_proba(utils.softmax(logit), grammar.possible_token)
-    token, _ = utils.index_sort(proba, 1)[0]
-    print(f"   - Sample: {model.decode([token])} {_}")
-    grammar.consume(token)
-    proba_list.append(_)
-fn = fn_dict.get(model.decode(grammar.result))
 if fn:
     print(f" + Result: {fn.name}")
