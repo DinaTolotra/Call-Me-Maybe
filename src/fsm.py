@@ -1,6 +1,3 @@
-t_token_set = set[int]
-
-
 class State:
     def __init__(self, name: str) -> None:
         self._name = name
@@ -21,26 +18,35 @@ class State:
 class TransitionTable:
     def __init__(self) -> None:
         self._table: dict[
-            State,
-            list[tuple[t_token_set, State]]
+            tuple[State, State],
+            set[int]
         ] = {}
 
-    def get_transition_list(
+    def get_allowed_token(
             self,
-            state: State
-            ) -> list[tuple[t_token_set, State]]:
-        return self._table[state]
+            state: State,
+            ) -> set[int]:
+        result = set[int]()
+        for src, dst in self._table:
+            val = self._table[(src, dst)]
+            if src == state:
+                result = result.union(val)
+        return result
+
+    def get_dst(self, state: State, token: int) -> State | None:
+        for src, dst in self._table:
+            if src == state and token in self._table[(src, dst)]:
+                return dst
+        return None
 
     def add_transition(
             self,
             src: State,
-            dst: State | None,
-            token: t_token_set | None
+            dst: State,
+            token: set[int]
             ) -> None:
-        l = self._table.get(src, [])
-        if dst is not None and token is not None:
-            l.append((token, dst))
-        self._table[src] = l
+        l = self._table.get((src, dst), set())
+        self._table[(src, dst)] = l.union(token)
 
 
 class Grammar:
@@ -65,19 +71,16 @@ class Grammar:
 
     @property
     def possible_token(self) -> set[int]:
-        token_set = t_token_set()
-        for token, _ in self._table.get_transition_list(self.state):
-            token_set = token_set.union(token)
-        return token_set
+        return self._table.get_allowed_token(self.state)
 
     @property
     def has_ended(self) -> bool:
         return self.state == self._final_state
 
     def consume(self, token: int) -> bool:
-        for token_set, state in self._table.get_transition_list(self._state):
-            if token in token_set:
-                self._result.append(token)
-                self._state = state
-                return True
+        if token in self._table.get_allowed_token(self._state):
+            state = self._table.get_dst(self.state, token)
+            self._state = state if state else self._final_state
+            self._result.append(token)
+            return True
         return False
