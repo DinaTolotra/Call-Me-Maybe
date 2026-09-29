@@ -47,10 +47,12 @@ class Grammar:
     def __init__(
             self,
             transition_table: TransitionTable,
-            initial_state: State
+            initial_state: State,
+            final_state: State
             ) -> None:
         self._table = transition_table
         self._state = initial_state
+        self._final_state = final_state
         self._result = list[int]()
 
     @property
@@ -67,6 +69,10 @@ class Grammar:
         for token, _ in self._table.get_transition_list(self.state):
             token_set = token_set.union(token)
         return token_set
+
+    @property
+    def has_ended(self) -> bool:
+        return self.state == self._final_state
 
     def consume(self, token: int) -> bool:
         for token_set, state in self._table.get_transition_list(self._state):

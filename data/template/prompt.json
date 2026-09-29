@@ -1,6 +1,6 @@
 {
 	"function_name": {
 		"name": "function_name",
-		"value": "You select which function best fulfils a request.\n\nFunctions:\n{function_list}\nF0; None of the functions above\n\nRequest: What is 4 plus 1?\nAnswer: F1;\n\nRequest: {instruction}\nAnswer: F"
+		"value": "You select which function best fulfils a request.\n\nFunctions:\n{function_list}\n\nRequest: What is 4 plus 1?\nAnswer: fn_add_numbers;\n\nRequest: {instruction}\nAnswer: "
 	}
 }
