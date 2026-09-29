@@ -8,8 +8,8 @@ from src.model import FnDef
 import src.utils as utils
 import src.fsm as fsm
 
-BATCH_SIZE = 3
-REQUEST_INDEX = 10
+BATCH_SIZE = 2
+REQUEST_INDEX = 11
 
 
 def get_function_in_batch(model: Model, request: str, prompt_template: str, fn_batch):
@@ -59,22 +59,22 @@ request_list = Prompt.parse_json("data/input/function_calling_tests.json")
 fn_list = FnDef.parse_json("data/input/functions_definition.json")
 template_dict = Template.parse_json("data/template/prompt.json")
 
-batch_result = []
-for fn_batch in utils.batched(fn_list, BATCH_SIZE):
-    fn = get_function_in_batch(
-        model,
-        request_list[REQUEST_INDEX].prompt,
-        template_dict["function_name"].value,
-        fn_batch
-    )
-    if fn:
-        batch_result.append(fn)
-
-fn = get_function_in_batch(
-    model,
-    request_list[REQUEST_INDEX].prompt,
-    template_dict["function_name"].value,
-    batch_result
-)
-if fn:
-    print(f" + Result: {fn.name}")
+result = fn_list
+while len(result) > 1:
+    temp_result = []
+    for fn_batch in utils.batched(result, BATCH_SIZE):
+        fn = get_function_in_batch(
+            model,
+            request_list[REQUEST_INDEX].prompt,
+            template_dict["function_name"].value,
+            fn_batch
+        )
+        if fn:
+            temp_result.append(fn)
+    result = temp_result
+if len(result) == 1:
+    print(f" + Result: {result[0].name}")
+elif len(result) == 0:
+    print(" + Result: None")
+else:
+    print(" + Result: ???")
