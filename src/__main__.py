@@ -1,5 +1,4 @@
-from math import ceil
-from functools import reduce
+from time import perf_counter
 
 from src.llm_model import Model
 from src.model import Template
@@ -32,7 +31,7 @@ def get_function_in_batch(model: Model, request: str, prompt_template: str, fn_b
     return fn
 
 
-def function_name_tournament(model: Model, request: Prompt, fn_list: list[FnDef], template_dict: dict[str, Template]) -> FnDef | None:
+def function_name_tournament(model: Model, request: Prompt, fn_list: list[FnDef], template: Template) -> FnDef | None:
     result = fn_list
     while len(result) > 1:
         temp_result = []
@@ -40,7 +39,7 @@ def function_name_tournament(model: Model, request: Prompt, fn_list: list[FnDef]
             fn = get_function_in_batch(
             model,
             request.prompt,
-            template_dict["function_name"].value,
+            template.value,
             fn_batch
         )
             if fn:
@@ -53,34 +52,26 @@ def function_name_tournament(model: Model, request: Prompt, fn_list: list[FnDef]
     return fn
 
 
-def extract_argument(model: Model, request: Prompt, template_dict: dict[str, Template], fn: FnDef) -> dict[str, str]:
+def extract_argument(model: Model, request: Prompt, template: Template, fn: FnDef) -> dict[str, str]:
     arg_val = dict[str, str]()
     for arg in fn.parameters:
-        prompt = template_dict["argument_value"].value.format(
-            fn_name = fn.name, fn_description = fn.description,
-            parameter_list = "\n".join([
-                f"'{p}' type {fn.parameters[p]["type"]}" for p in fn.parameters
-            ]),
-            instruction = request.prompt,
-            previous_arguments = "\n".join([
-                f"'{a}' = {arg_val[a]}" for a in arg_val
-            ]),
-            param_name = arg
+        factory = fct.ArgExtractionPromptFactory(
+            template.value, fn_name=fn.name, description=fn.description,
+            param_name=arg, instruction=request,
+            arg_val=arg_val, param_list=fn.parameters
         )
         if fn.parameters[arg]["type"] == "number":
             grammar = fct.GrammarFactory.create_number_grammar(model)
         else:
             grammar = fct.GrammarFactory.create_string_grammar(model)
-        prompt_token = model.encode(prompt)
+        prompt_token = model.encode(factory.prompt)
         while not grammar.has_ended:
             logit = model.infer(prompt_token + grammar.result)
             proba = utils.filter_proba(utils.softmax(logit), grammar.possible_token)
             token, _ = utils.index_sort(proba, 1)[0]
-            # print(f"   - Sample: {model.decode([token])} {_}")
             grammar.consume(token)
-        arg_val[arg] = model.decode(grammar.result)
+        arg_val[arg] = model.decode(grammar.result).removesuffix(";")
     return arg_val
-        
 
 
 model = Model()
@@ -88,13 +79,17 @@ request_list = Prompt.parse_json("data/input/function_calling_tests.json")
 fn_list = FnDef.parse_json("data/input/functions_definition.json")
 template_dict = Template.parse_json("data/template/prompt.json")
 
-
+duration = 0
 for request in request_list:
-    fn = function_name_tournament(model, request, fn_list, template_dict)
+    start = perf_counter()
+    fn = function_name_tournament(model, request, fn_list, template_dict["function_name"])
     if fn:
-        arg = extract_argument(model, request, template_dict, fn)
-        print(" + Result:")
-        print(f"   - Request: {request}")
+        arg = extract_argument(model, request, template_dict["argument_value"], fn)
+        end = perf_counter()
+        duration += end - start
+        print(f" + Result in {end - start:.4f}s")
+        print(f"   - Request: {request.prompt}")
         print(f"   - Function: {fn.name}")
         for arg_name, arg_val in arg.items():
             print(f"   - Argument\t{arg_name} = {arg_val}")
+print(f" + Total {duration:.4f}s")

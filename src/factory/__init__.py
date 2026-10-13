@@ -1,7 +1,7 @@
 from string import digits, printable
 
 from src.llm_model import Model
-from src.model import FnDef
+from src.model import FnDef, Prompt
 import src.fsm as fsm
 
 
@@ -135,4 +135,41 @@ class GrammarFactory:
         return fsm.Grammar(
             TransitionTableFactory.create_boolean_table(model),
             state["boolean_start"], state["boolean_end"]
+        )
+
+
+class ArgExtractionPromptFactory:
+    def __init__(
+            self,
+            template: str, *,
+            fn_name: str,
+            param_name: str,
+            description: str,
+            instruction: Prompt,
+            arg_val: dict[str, str],
+            param_list: dict[str, dict[str, str]],
+
+
+        ) -> None:
+        self._template = template
+        self.fn_name = fn_name
+        self.description = description
+        self.instruction = instruction
+        self.param_name = param_name
+        self.arg_val_str = "\n".join([
+            f"'{a}' = {arg_val[a]}" for a in arg_val
+        ])
+        self.param_list_str = "\n".join([
+            f"'{p}' type {param_list[p]["type"]}" for p in param_list
+        ])
+
+    @property
+    def prompt(self) -> str:
+        return self._template.format(
+            fn_name = self.fn_name,
+            fn_description = self.description,
+            parameter_list = self.param_list_str,
+            instruction = self.instruction,
+            previous_arguments = self.arg_val_str,
+            param_name = self.param_name
         )
