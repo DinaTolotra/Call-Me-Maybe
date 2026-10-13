@@ -81,7 +81,7 @@ class TransitionTableFactory:
         table.add_transition(
             state["non-quote"],
             state["closing_quote"],
-            set(model.encode("\""))
+            set(model.encode("\";"))
         )
         return table
 

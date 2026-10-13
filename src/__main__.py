@@ -10,7 +10,7 @@ import src.utils as utils
 import src.fsm as fsm
 
 BATCH_SIZE = 2
-REQUEST_INDEX = 2
+REQUEST_INDEX = 8
 
 
 def get_function_in_batch(model: Model, request: str, prompt_template: str, fn_batch: list[FnDef]):
@@ -28,7 +28,6 @@ def get_function_in_batch(model: Model, request: str, prompt_template: str, fn_b
         logit = model.infer(prompt_token + grammar.result)
         proba = utils.filter_proba(utils.softmax(logit), grammar.possible_token)
         token, _ = utils.index_sort(proba, 1)[0]
-        print(f"   - Sample: {model.decode([token])} {_}")
         grammar.consume(token)
         proba_list.append(_)
     fn = fn_dict.get(model.decode(grammar.result))
@@ -82,12 +81,10 @@ if fn:
         else:
             grammar = fct.GrammarFactory.create_string_grammar(model)
         prompt_token = model.encode(prompt)
-        proba_list = []
         while not grammar.has_ended:
             logit = model.infer(prompt_token + grammar.result)
             proba = utils.filter_proba(utils.softmax(logit), grammar.possible_token)
             token, _ = utils.index_sort(proba, 1)[0]
             print(f"   - Sample: {model.decode([token])} {_}")
             grammar.consume(token)
-            proba_list.append(_)
         print(f" + Result: {model.decode(grammar.result)}")

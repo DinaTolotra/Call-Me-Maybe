@@ -1,6 +1,6 @@
 export HF_HUB_DISABLE_PROGRESS_BARS=1
 export HF_HOME=.hf_cache
-export HF_HUB_OFFLINE=1
+export HF_HUB_OFFLINE=0
 
 install:
 	@echo " + Installing dependencies..."
