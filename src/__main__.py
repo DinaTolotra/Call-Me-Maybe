@@ -7,10 +7,8 @@ from src.model import Prompt
 from src.model import FnDef
 import src.factory as fct
 import src.utils as utils
-import src.fsm as fsm
 
-BATCH_SIZE = 2
-REQUEST_INDEX = 8
+BATCH_SIZE = 3
 
 
 def get_function_in_batch(model: Model, request: str, prompt_template: str, fn_batch: list[FnDef]):
@@ -34,35 +32,28 @@ def get_function_in_batch(model: Model, request: str, prompt_template: str, fn_b
     return fn
 
 
-model = Model()
-request_list = Prompt.parse_json("data/input/function_calling_tests.json")
-fn_list = FnDef.parse_json("data/input/functions_definition.json")
-template_dict = Template.parse_json("data/template/prompt.json")
-
-result = fn_list
-while len(result) > 1:
-    temp_result = []
-    for fn_batch in utils.batched(result, BATCH_SIZE):
-        fn = get_function_in_batch(
+def function_name_tournament(model: Model, request: Prompt, fn_list: list[FnDef], template_dict: dict[str, Template]) -> FnDef | None:
+    result = fn_list
+    while len(result) > 1:
+        temp_result = []
+        for fn_batch in utils.batched(result, BATCH_SIZE):
+            fn = get_function_in_batch(
             model,
-            request_list[REQUEST_INDEX].prompt,
+            request.prompt,
             template_dict["function_name"].value,
             fn_batch
         )
-        if fn:
-            temp_result.append(fn)
-    result = temp_result
+            if fn:
+                temp_result.append(fn)
+        result = temp_result
 
-fn = None
-if len(result) == 1:
-    print(f" + Result: {result[0].name}")
-    fn = result[0]
-elif len(result) == 0:
-    print(" + Result: None")
-else:
-    print(" + Result: ???")
+    fn = None
+    if len(result) == 1:
+        fn = result[0]
+    return fn
 
-if fn:
+
+def extract_argument(model: Model, request: Prompt, template_dict: dict[str, Template], fn: FnDef) -> dict[str, str]:
     arg_val = dict[str, str]()
     for arg in fn.parameters:
         prompt = template_dict["argument_value"].value.format(
@@ -70,7 +61,7 @@ if fn:
             parameter_list = "\n".join([
                 f"'{p}' type {fn.parameters[p]["type"]}" for p in fn.parameters
             ]),
-            instruction = request_list[REQUEST_INDEX].prompt,
+            instruction = request.prompt,
             previous_arguments = "\n".join([
                 f"'{a}' = {arg_val[a]}" for a in arg_val
             ]),
@@ -85,6 +76,25 @@ if fn:
             logit = model.infer(prompt_token + grammar.result)
             proba = utils.filter_proba(utils.softmax(logit), grammar.possible_token)
             token, _ = utils.index_sort(proba, 1)[0]
-            print(f"   - Sample: {model.decode([token])} {_}")
+            # print(f"   - Sample: {model.decode([token])} {_}")
             grammar.consume(token)
-        print(f" + Result: {model.decode(grammar.result)}")
+        arg_val[arg] = model.decode(grammar.result)
+    return arg_val
+        
+
+
+model = Model()
+request_list = Prompt.parse_json("data/input/function_calling_tests.json")
+fn_list = FnDef.parse_json("data/input/functions_definition.json")
+template_dict = Template.parse_json("data/template/prompt.json")
+
+
+for request in request_list:
+    fn = function_name_tournament(model, request, fn_list, template_dict)
+    if fn:
+        arg = extract_argument(model, request, template_dict, fn)
+        print(" + Result:")
+        print(f"   - Request: {request}")
+        print(f"   - Function: {fn.name}")
+        for arg_name, arg_val in arg.items():
+            print(f"   - Argument\t{arg_name} = {arg_val}")

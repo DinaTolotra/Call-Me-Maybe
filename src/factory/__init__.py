@@ -12,7 +12,9 @@ state = {
     "digit": fsm.State("digit"),
     "opening_quote": fsm.State("opening_quote"),
     "closing_quote": fsm.State("closing_quote"),
-    "non-quote": fsm.State("non-quote")
+    "non-quote": fsm.State("non-quote"),
+    "boolean_start": fsm.State("boolean_start"),
+    "boolean_end": fsm.State("boolean_end"),
 }
 
 
@@ -85,6 +87,26 @@ class TransitionTableFactory:
         )
         return table
 
+    @classmethod
+    def create_boolean_table(cls, model: Model) -> fsm.TransitionTable:
+        table = fsm.TransitionTable()
+
+        semicolon = tuple(model.encode(";"))
+        sequences = set[int]()
+        for literal in ("true", "false", "True", "False"):
+            sequences = sequences.union(
+                model.encode(literal + ";"),
+                model.encode(literal),
+                semicolon
+            )
+
+        table.add_transition(
+            state["boolean_start"],
+            state["boolean_end"],
+            sequences
+        )
+        return table
+
 
 class GrammarFactory:
     @classmethod
@@ -106,4 +128,11 @@ class GrammarFactory:
         return fsm.Grammar(
             TransitionTableFactory.create_string_table(model),
             state["opening_quote"], state["closing_quote"]
+        )
+
+    @classmethod
+    def create_boolean_grammar(cls, model: Model) -> fsm.Grammar:
+        return fsm.Grammar(
+            TransitionTableFactory.create_boolean_table(model),
+            state["boolean_start"], state["boolean_end"]
         )
