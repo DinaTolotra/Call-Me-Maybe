@@ -11,17 +11,21 @@ def softmax(logits: list[float]) -> list[float]:
 
 def index_sort(l: list[float], count: int) -> list[tuple[int, float]]:
     res: list[tuple[int, float]] = []
-    while len(res) < len(l) and len(res) <= count:
+    working = list(l)
+    limit = min(count, len(working))
+    while len(res) < limit:
         max_value: float = -float_info.max
         max_index: int = -1
-        for i, value in enumerate(l):
+        for i, value in enumerate(working):
             if value > max_value:
                 max_value = value
                 max_index = i
-        if max_index != -1:
-            res.append((max_index, max_value))
-            l[max_index] = -float_info.max
+        if max_index == -1:
+            break
+        res.append((max_index, max_value))
+        working[max_index] = -float_info.max
     return res
+
 
 def filter_proba(proba: list[float], allowed: set[int]) -> list[float]:
     res = list[float]()
@@ -31,6 +35,7 @@ def filter_proba(proba: list[float], allowed: set[int]) -> list[float]:
             val = 0.
         res.append(val)
     return res
+
 
 def batched(l: list[Any], batch_size: int) -> Generator[list[Any], None, None]:
     for i in range(0, len(l), batch_size):

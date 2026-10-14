@@ -24,9 +24,10 @@ class TransitionTableFactory:
         table = fsm.TransitionTable()
         fn_name_token = list[int]()
         fn_list.append(FnDef(
-            name = "undefined",
-            description = "None of the functions listed",
-            parameters = {}, returns = {}
+            name="undefined",
+            description="None of the functions listed",
+            parameters={},
+            returns={},
         ))
         for fn in fn_list:
             token = model.encode(fn.name)
@@ -165,11 +166,16 @@ class ArgExtractionPromptFactory:
 
     @property
     def prompt(self) -> str:
-        return self._template.format(
-            fn_name = self.fn_name,
-            fn_description = self.description,
-            parameter_list = self.param_list_str,
-            instruction = self.instruction,
-            previous_arguments = self.arg_val_str,
-            param_name = self.param_name
+        return self._template.replace(
+            "{fn_name}", self.fn_name
+        ).replace(
+            "{fn_description}", self.description
+        ).replace(
+            "{parameter_list}", self.param_list_str
+        ).replace(
+            "{instruction}", self.instruction.prompt
+        ).replace(
+            "{previous_arguments}", self.arg_val_str
+        ).replace(
+            "{param_name}", self.param_name
         )

@@ -77,8 +77,16 @@ class Template(pd.BaseModel):
 
 class Result(pd.BaseModel):
     prompt: Annotated[str, pd.Field(min_length=1)]
-    parameters: Annotated[dict[str, str], pd.Field(min_length=1)]
     name: Annotated[Optional[str], pd.Field(min_length=3, pattern=r"^[a-zA-Z_][a-zA-Z0-9_]*$")]
+    parameters: Annotated[dict[str, str], pd.Field()]
 
     def add_parameter(self, name: str, value: str) -> None:
         self.parameters[name] = value
+
+    @staticmethod
+    def save_list(result_list: list["Result"]) -> None:
+        adapter = pd.TypeAdapter(list[Result])
+        json_str = adapter.dump_json(result_list, indent=4).decode()
+        with open("data/output/function_calling_results.json", "w") as f:
+            f.write(json_str)
+
