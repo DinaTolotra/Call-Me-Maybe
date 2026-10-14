@@ -86,4 +86,4 @@ def clean(s: str) -> str:
     s = s.removeprefix('"')
     s = s.removesuffix('"')
     s = s.replace("\\\\", "\\")
-    return s
+    return s.strip()

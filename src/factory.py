@@ -1,4 +1,5 @@
 from string import digits
+from functools import cache
 
 from src.llm_model import Model
 from src.model import FnDef, Prompt
@@ -49,6 +50,7 @@ class TransitionTableFactory:
         return table
 
     @classmethod
+    @cache
     def create_number_table(cls, model: Model) -> fsm.TransitionTable:
         table = fsm.TransitionTable()
         digit_token = list[int]()
@@ -68,6 +70,7 @@ class TransitionTableFactory:
         return table
 
     @classmethod
+    @cache
     def create_string_table(cls, model: Model) -> fsm.TransitionTable:
         table = fsm.TransitionTable()
         non_quote_token = list[int]()
@@ -93,6 +96,7 @@ class TransitionTableFactory:
         return table
 
     @classmethod
+    @cache
     def create_boolean_table(cls, model: Model) -> fsm.TransitionTable:
         table = fsm.TransitionTable()
 
