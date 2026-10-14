@@ -1,10 +1,12 @@
 from time import perf_counter
+from sys import argv
 
 from src.llm_model import Model
 from src.model import Template
 from src.model import Prompt
 from src.model import FnDef
 from src.model import Result
+from src.parser import parse
 import src.factory as fct
 import src.utils as utils
 
@@ -120,14 +122,15 @@ def run_request(
 
 def main() -> None:
     model = Model()
-    request_list = Prompt.parse_json("data/input/function_calling_tests.json")
-    fn_list = FnDef.parse_json("data/input/functions_definition.json")
+
+    fn_def_file, input_file, output_file = parse(argv)
+    request_list = Prompt.parse_json(input_file)
+    fn_list = FnDef.parse_json(fn_def_file)
     template_dict = Template.parse_json("data/template/prompt.json")
-    output_file = "data/output/function_calling_results.json"
     result_list: list[Result] = []
 
     total_duration = 0.0
-    for request in request_list:
+    for request in request_list[0:1]:
         start = perf_counter()
         result = run_request(model, request, fn_list, template_dict)
         elapsed = perf_counter() - start
