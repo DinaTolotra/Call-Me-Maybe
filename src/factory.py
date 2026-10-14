@@ -27,7 +27,7 @@ class TransitionTableFactory:
             fn_list: list[FnDef]
             ) -> fsm.TransitionTable:
         table = fsm.TransitionTable()
-        fn_name_token = list[int]()
+        fn_name_token: list[int] = []
         fn_list.append(FnDef(
             name="undefined",
             description="None of the functions listed",
@@ -53,7 +53,7 @@ class TransitionTableFactory:
     @cache
     def create_number_table(cls, model: Model) -> fsm.TransitionTable:
         table = fsm.TransitionTable()
-        digit_token = list[int]()
+        digit_token: list[int] = []
         for d in digits:
             token = model.encode(d)
             digit_token.extend(token)
@@ -73,7 +73,9 @@ class TransitionTableFactory:
     @cache
     def create_string_table(cls, model: Model) -> fsm.TransitionTable:
         table = fsm.TransitionTable()
-        non_quote_token = list[int]()
+        non_quote_token: list[int] = []
+        if model.vocab_size == 0:
+            raise RuntimeError("uknown vocabulary size")
         for token in range(model.vocab_size):
             text = model.decode([token])
             if "\n" not in text and "\"" not in text and text:
@@ -176,19 +178,24 @@ class ArgExtractionPromptFactory:
 
     @property
     def prompt(self) -> str:
-        return self._template.replace(
-            "{fn_name}", self.fn_name
-        ).replace(
-            "{fn_description}", self.description
-        ).replace(
-            "{parameter_list}", self.param_list_str
-        ).replace(
-            "{instruction}", self.instruction.prompt
-        ).replace(
-            "{previous_arguments}", self.arg_val_str
-        ).replace(
-            "{param_name}", self.param_name
-        )
+        try:
+            return self._template.replace(
+                "{fn_name}", self.fn_name
+            ).replace(
+                "{fn_description}", self.description
+            ).replace(
+                "{parameter_list}", self.param_list_str
+            ).replace(
+                "{instruction}", self.instruction.prompt
+            ).replace(
+                "{previous_arguments}", self.arg_val_str
+            ).replace(
+                "{param_name}", self.param_name
+            )
+        except Exception:
+            raise RuntimeError(
+                "Failed to create an Argument Extraction Prompt"
+            )
 
 
 class FunctionPromptFactory:
@@ -206,8 +213,13 @@ class FunctionPromptFactory:
 
     @property
     def prompt(self) -> str:
-        return self._template.replace(
-            "{instruction}", self.instruction
-        ).replace(
-            "{function_list}", self.fn_list_str
-        )
+        try:
+            return self._template.replace(
+                "{instruction}", self.instruction
+            ).replace(
+                "{function_list}", self.fn_list_str
+            )
+        except Exception:
+            raise RuntimeError(
+                "Failed to create a Function Prompt:",
+            )

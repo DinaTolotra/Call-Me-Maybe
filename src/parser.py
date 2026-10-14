@@ -14,5 +14,11 @@ def parse(argv: list[str]) -> tuple[str, str, str]:
         elif argv[i] == "-output":
             output_file = argv[i + 1]
             i += 2
-        break
+        else:
+            print(
+                "Usage: uv run python -m src",
+                "[-functions_definition <function_definition_file>]",
+                "[-input <input_file>] [-output <output_file>]"
+            )
+            break
     return (fn_def_file, input_file, output_file)

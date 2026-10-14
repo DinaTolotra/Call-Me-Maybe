@@ -1,5 +1,5 @@
 from time import perf_counter
-from sys import argv
+from sys import argv, stderr
 
 from src.llm_model import Model
 from src.model import Template
@@ -9,6 +9,7 @@ from src.model import Result
 from src.parser import parse
 import src.factory as fct
 import src.utils as utils
+import src.logging as logging
 
 BATCH_SIZE = 3
 
@@ -87,14 +88,6 @@ def extract_argument(
     return arg_val
 
 
-def print_result(result: Result) -> None:
-    print(" + Result")
-    print(f"   - Request\t {result.prompt}")
-    print(f"   - Function\t {result.name}")
-    for arg_name, arg_val in result.parameters.items():
-        print(f"   - Argument\t {arg_name} = {arg_val}")
-
-
 def run_request(
         model: Model,
         request: Prompt,
@@ -124,27 +117,48 @@ def main() -> None:
     model = Model()
 
     fn_def_file, input_file, output_file = parse(argv)
+    logging.print_arg(fn_def_file, input_file, output_file)
+
+    if not utils.check_input_file(fn_def_file, input_file):
+        print("Error: Invalid input file", file=stderr)
+        return
+    elif not utils.check_output_file(output_file):
+        print("Error: Invalid output file", file=stderr)
+        return
+
     request_list = Prompt.parse_json(input_file)
     fn_list = FnDef.parse_json(fn_def_file)
     template_dict = Template.parse_json("data/template/prompt.json")
     result_list: list[Result] = []
 
+    if len(template_dict) == 0:
+        return
+    if len(fn_list) == 0:
+        return
+    if len(request_list) == 0:
+        return
+
     total_duration = 0.0
     for request in request_list[0:1]:
-        start = perf_counter()
-        result = run_request(model, request, fn_list, template_dict)
-        elapsed = perf_counter() - start
-        total_duration += elapsed
-
-        if result.name is None:
-            continue
-
-        print_result(result)
-        result_list.append(result)
-        print(f"   - Duration\t {elapsed:.2f}s")
-    print(f" + Total {total_duration:.2f}s")
+        try:
+            start = perf_counter()
+            result = run_request(model, request, fn_list, template_dict)
+            elapsed = perf_counter() - start
+            total_duration += elapsed
+            if result.name is None:
+                continue
+            logging.print_result(result)
+            result_list.append(result)
+            print(f"   - Duration\t {elapsed:.2f}s")
+        except Exception as error:
+            print("Error:", error, file=stderr)
+            return
+    print(f" + Total infering\t {total_duration:.2f}s")
     Result.save_list(result_list, output_file)
 
 
 if __name__ == "__main__":
+    start = perf_counter()
     main()
+    duration = perf_counter() - start
+    print(f" + Total program\t {duration:.2f}s")

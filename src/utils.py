@@ -1,11 +1,13 @@
-from collections.abc import Callable
+from os.path import dirname, exists, isdir, isfile
+from os import access, R_OK, W_OK, X_OK
 from typing import Generator, Any
-from time import perf_counter
 from sys import float_info
 import numpy as np
 
 
 def softmax(logits: list[float]) -> list[float]:
+    if len(logits) == 0:
+        return []
     np_logits = np.array(logits)
     exp_logits = np.exp(np_logits - np.max(np_logits))
     return list(exp_logits / np.sum(exp_logits))
@@ -13,7 +15,7 @@ def softmax(logits: list[float]) -> list[float]:
 
 def index_sort(iterable: list[float], count: int) -> list[tuple[int, float]]:
     res: list[tuple[int, float]] = []
-    working = list(iterable)
+    working = iterable.copy()
     limit = min(count, len(working))
     while len(res) < limit:
         max_value: float = -float_info.max
@@ -30,7 +32,7 @@ def index_sort(iterable: list[float], count: int) -> list[tuple[int, float]]:
 
 
 def filter_proba(proba: list[float], allowed: set[int]) -> list[float]:
-    res = list[float]()
+    res: list[float] = []
     for i in range(len(proba)):
         val = proba[i]
         if i not in allowed:
@@ -47,38 +49,25 @@ def batched(
         yield iterable[i:min(len(iterable), i + batch_size)]
 
 
-def counter() -> dict[str, Callable[[], float]]:
-    total_time = 0.
-    start_time = 0.
-    end_time = 0.
+def check_input_file(fn_def_file: str, input_file: str) -> bool:
+    return (
+        exists(fn_def_file) and isfile(fn_def_file) and
+        exists(input_file) and isfile(input_file) and
+        access(fn_def_file, R_OK) and access(input_file, R_OK)
+    )
 
-    def start() -> float:
-        nonlocal start_time
-        start_time = perf_counter()
-        return start_time
 
-    def end() -> float:
-        nonlocal end_time
-        end_time = perf_counter()
-        return end_time
-
-    def total() -> float:
-        return total_time
-
-    def duration() -> float:
-        nonlocal total_time
-        duration_time = end_time - start_time
-        if duration_time < 0:
-            raise RuntimeError("start - end - duration sequence")
-        total_time += duration_time
-        return duration_time
-
-    return {
-        "start": start,
-        "end": end,
-        "duration": duration,
-        "total": total
-    }
+def check_output_file(output_file: str) -> bool:
+    return (
+        (
+            not exists(output_file) or
+            access(output_file, W_OK)
+        ) and
+        exists(dirname(output_file)) and
+        isdir(dirname(output_file)) and
+        not isdir(output_file) and
+        access(dirname(output_file), X_OK | W_OK)
+    )
 
 
 def clean(s: str) -> str:
