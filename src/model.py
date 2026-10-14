@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Optional
 import pydantic as pd
 
 
@@ -73,3 +73,12 @@ class Template(pd.BaseModel):
         except Exception as error:
             print("ERROR: ", error)
         return {}
+
+
+class Result(pd.BaseModel):
+    prompt: Annotated[str, pd.Field(min_length=1)]
+    parameters: Annotated[dict[str, str], pd.Field(min_length=1)]
+    name: Annotated[Optional[str], pd.Field(min_length=3, pattern=r"^[a-zA-Z_][a-zA-Z0-9_]*$")]
+
+    def add_parameter(self, name: str, value: str) -> None:
+        self.parameters[name] = value
