@@ -1,4 +1,4 @@
-from string import digits, printable
+from string import digits
 
 from src.llm_model import Model
 from src.model import FnDef, Prompt
@@ -20,7 +20,11 @@ state = {
 
 class TransitionTableFactory:
     @classmethod
-    def create_fn_name_table(cls, model: Model, fn_list: list[FnDef]) -> fsm.TransitionTable:
+    def create_fn_name_table(
+            cls,
+            model: Model,
+            fn_list: list[FnDef]
+            ) -> fsm.TransitionTable:
         table = fsm.TransitionTable()
         fn_name_token = list[int]()
         fn_list.append(FnDef(
@@ -111,7 +115,11 @@ class TransitionTableFactory:
 
 class GrammarFactory:
     @classmethod
-    def create_fn_name_grammar(cls, model: Model, fn_list: list[FnDef]) -> fsm.Grammar:
+    def create_fn_name_grammar(
+            cls,
+            model: Model,
+            fn_list: list[FnDef]
+            ) -> fsm.Grammar:
         return fsm.Grammar(
             TransitionTableFactory.create_fn_name_table(model, fn_list),
             state["generating"], state["stoping"]
@@ -147,11 +155,9 @@ class ArgExtractionPromptFactory:
             param_name: str,
             description: str,
             instruction: Prompt,
-            arg_val: dict[str, str],
-            param_list: dict[str, dict[str, str]],
-
-
-        ) -> None:
+            arg_val: dict[str, str | float],
+            param_list: dict[str, dict[str, str]]
+            ) -> None:
         self._template = template
         self.fn_name = fn_name
         self.description = description
@@ -178,4 +184,26 @@ class ArgExtractionPromptFactory:
             "{previous_arguments}", self.arg_val_str
         ).replace(
             "{param_name}", self.param_name
+        )
+
+
+class FunctionPromptFactory:
+    def __init__(
+            self,
+            template: str,
+            instruction: str,
+            fn_list: list[FnDef]
+            ) -> None:
+        self._template = template
+        self.instruction = instruction
+        self.fn_list_str = "\n".join([
+            f"{fn.name}; {fn.description}" for fn in fn_list
+        ])
+
+    @property
+    def prompt(self) -> str:
+        return self._template.replace(
+            "{instruction}", self.instruction
+        ).replace(
+            "{function_list}", self.fn_list_str
         )

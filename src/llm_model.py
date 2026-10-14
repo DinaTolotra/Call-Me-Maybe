@@ -1,4 +1,4 @@
-import llm_sdk as sdk
+import llm_sdk.llm_sdk as sdk
 
 
 class Model:

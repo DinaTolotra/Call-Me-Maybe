@@ -1,6 +1,7 @@
 export HF_HUB_DISABLE_PROGRESS_BARS=1
 export HF_HOME=.hf_cache
 export HF_HUB_OFFLINE=0
+export PYTHONPATH=.
 
 install:
 	@echo " + Installing dependencies..."
@@ -39,12 +40,12 @@ clean:
 
 lint:
 	@echo " + Checking norme..."
-	@uv -n tool run flake8 src/
+	@uv run python -m flake8 . --exclude=.venv,llm_sdk
 	@echo " + Checking type hint..."
-	@uv -n tool run mypy src/ --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
+	@uv run python -m mypy src --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs --explicit-package-bases
 
 lint-strict:
 	@echo " + Checking norme..."
-	@uv -n tool run flake8 src/
+	@uv run python -m flake8 . --exclude=.venv,llm_sdk
 	@echo " + Checking type hint..."
-	@uv -n tool run mypy src/ --strict
+	@uv run python -m mypy src --strict --explicit-package-bases

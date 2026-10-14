@@ -26,7 +26,10 @@ class FnDef(pd.BaseModel):
     ]
 
     def __str__(self) -> str:
-        param = ", ".join([f"{self.parameters[name]['type']} '{name}'" for name in self.parameters])
+        param = ", ".join([
+            f"{self.parameters[name]['type']} '{name}'"
+            for name in self.parameters
+        ])
         return f"{self.name} with {param}: {self.description}"
 
     @staticmethod
@@ -77,16 +80,18 @@ class Template(pd.BaseModel):
 
 class Result(pd.BaseModel):
     prompt: Annotated[str, pd.Field(min_length=1)]
-    name: Annotated[Optional[str], pd.Field(min_length=3, pattern=r"^[a-zA-Z_][a-zA-Z0-9_]*$")]
-    parameters: Annotated[dict[str, str], pd.Field()]
+    name: Annotated[
+        Optional[str],
+        pd.Field(min_length=3, pattern=r"^[a-zA-Z_][a-zA-Z0-9_]*$")
+    ]
+    parameters: Annotated[dict[str, str | float], pd.Field()]
 
     def add_parameter(self, name: str, value: str) -> None:
         self.parameters[name] = value
 
     @staticmethod
-    def save_list(result_list: list["Result"]) -> None:
+    def save_list(result_list: list["Result"], file: str) -> None:
         adapter = pd.TypeAdapter(list[Result])
         json_str = adapter.dump_json(result_list, indent=4).decode()
-        with open("data/output/function_calling_results.json", "w") as f:
+        with open(file, "w") as f:
             f.write(json_str)
-

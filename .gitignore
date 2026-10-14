@@ -11,3 +11,7 @@ wheels/
 
 # HF temp file
 .hf_cache
+
+# Data
+data/output
+data/prompt

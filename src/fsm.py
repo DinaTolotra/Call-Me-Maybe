@@ -45,8 +45,8 @@ class TransitionTable:
             dst: State,
             token: set[int]
             ) -> None:
-        l = self._table.get((src, dst), set())
-        self._table[(src, dst)] = l.union(token)
+        temp = self._table.get((src, dst), set())
+        self._table[(src, dst)] = temp.union(token)
 
 
 class Grammar:
@@ -70,7 +70,7 @@ class Grammar:
         return self._state
 
     @property
-    def possible_token(self) -> set[int]:
+    def token(self) -> set[int]:
         return self._table.get_allowed_token(self.state)
 
     @property
