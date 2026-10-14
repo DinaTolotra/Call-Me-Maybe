@@ -1,0 +1,167 @@
+[
+  {
+    "prompt": "Does the file /home/user/notes.txt exist?"
+  },
+  {
+    "prompt": "Check if /var/log is a directory."
+  },
+  {
+    "prompt": "Is /etc/hosts a regular file?"
+  },
+  {
+    "prompt": "Can I read /home/user/report.pdf?"
+  },
+  {
+    "prompt": "Am I allowed to write to /tmp/output.log?"
+  },
+  {
+    "prompt": "Can I create new files inside /home/user/projects/out?"
+  },
+  {
+    "prompt": "How big is /home/user/data.csv in bytes?"
+  },
+  {
+    "prompt": "When was /home/user/config.yaml last modified?"
+  },
+  {
+    "prompt": "What are the permissions on /usr/local/bin/script.sh?"
+  },
+  {
+    "prompt": "Set the permissions of /home/user/run.sh to 493."
+  },
+  {
+    "prompt": "Read the contents of /home/user/readme.txt using utf-8 encoding."
+  },
+  {
+    "prompt": "Write the text 'Hello, world' to /tmp/hello.txt and overwrite anything already there."
+  },
+  {
+    "prompt": "Append the line 'Backup complete' to /var/log/backup.log."
+  },
+  {
+    "prompt": "Create the directory /home/user/projects/new/app/src, including any missing parent folders."
+  },
+  {
+    "prompt": "Delete the file /tmp/old_cache.tmp."
+  },
+  {
+    "prompt": "Remove the empty directory /home/user/empty_folder."
+  },
+  {
+    "prompt": "Delete /home/user/old_project and everything inside it."
+  },
+  {
+    "prompt": "Copy /home/user/a.txt to /home/user/backup/a.txt, but don't overwrite if it already exists."
+  },
+  {
+    "prompt": "Rename /home/user/draft.txt to /home/user/final.txt."
+  },
+  {
+    "prompt": "List all .py files under /home/user/code, including subfolders."
+  },
+  {
+    "prompt": "How many files are directly inside /home/user/photos, not counting subfolders?"
+  },
+  {
+    "prompt": "What is the file extension of archive.tar.gz?"
+  },
+  {
+    "prompt": "Join /home/user with documents/report.docx into one path."
+  },
+  {
+    "prompt": "Give me the sha256 hash of /home/user/installer.iso."
+  },
+  {
+    "prompt": "Are /home/user/a.bin and /home/user/b.bin exactly the same?"
+  },
+  {
+    "prompt": "What directory am I currently in?"
+  },
+  {
+    "prompt": "Change the working directory to /home/user/projects."
+  },
+  {
+    "prompt": "Set the permissions of /home/user/run.sh to 'rwxr-xr-x'."
+  },
+  {
+    "prompt": "Check if the path 12345 exists."
+  },
+  {
+    "prompt": "Does the file true exist?"
+  },
+  {
+    "prompt": "Write the number 42 to /tmp/answer.txt, and set append to 'yes please'."
+  },
+  {
+    "prompt": "Create the directory /tmp/new_dir with parents set to 'maybe'."
+  },
+  {
+    "prompt": "Count the files in /home/user/docs with recursive set to 1."
+  },
+  {
+    "prompt": "Compute the hash of /home/user/file.txt using algorithm 256."
+  },
+  {
+    "prompt": "Read /home/user/notes.txt with encoding set to true."
+  },
+  {
+    "prompt": "Set the permissions of /tmp/data.txt to the string 'seven-five-five'."
+  },
+  {
+    "prompt": "Copy /home/user/a.txt to 404 and overwrite it."
+  },
+  {
+    "prompt": "How big is the file at path [\"/tmp/a.txt\", \"/tmp/b.txt\"]?"
+  },
+  {
+    "prompt": "Delete it."
+  },
+  {
+    "prompt": "Check the file."
+  },
+  {
+    "prompt": "Make a copy of the report."
+  },
+  {
+    "prompt": "Move the file to the other folder."
+  },
+  {
+    "prompt": "Can I use the folder?"
+  },
+  {
+    "prompt": "Clean up my downloads."
+  },
+  {
+    "prompt": "Show me what's in the directory."
+  },
+  {
+    "prompt": "Is the file safe to open?"
+  },
+  {
+    "prompt": "Write something to the log file."
+  },
+  {
+    "prompt": "Change the permissions so everyone can access it."
+  },
+  {
+    "prompt": "Rename my photos to something better."
+  },
+  {
+    "prompt": "Delete the folder named projects."
+  },
+  {
+    "prompt": "Does the config exist, and if so, read it and tell me whether it's valid?"
+  },
+  {
+    "prompt": "Find the biggest file in /home/user."
+  },
+  {
+    "prompt": "Compress /home/user/docs into a zip file."
+  },
+  {
+    "prompt": "What is the sum of 2 and 3?"
+  },
+  {
+    "prompt": "Send /home/user/report.pdf to my manager by email."
+  }
+]

@@ -73,6 +73,8 @@ def extract_argument(
         )
         if fn.parameters[arg]["type"] == "number":
             grammar = fct.GrammarFactory.create_number_grammar(model)
+        elif fn.parameters[arg]["type"] == "boolean":
+            grammar = fct.GrammarFactory.create_boolean_grammar(model)
         else:
             grammar = fct.GrammarFactory.create_string_grammar(model)
         prompt_token = model.encode(factory.prompt)
@@ -139,7 +141,7 @@ def main() -> None:
         return
 
     total_duration = 0.0
-    for request in request_list[0:1]:
+    for request in request_list:
         try:
             start = perf_counter()
             result = run_request(model, request, fn_list, template_dict)

@@ -1,0 +1,215 @@
+[
+  {
+    "name": "fn_path_exists",
+    "description": "Check whether a file or directory exists at the given path.",
+    "parameters": {
+      "path": { "type": "string" }
+    },
+    "returns": { "type": "boolean" }
+  },
+  {
+    "name": "fn_is_file",
+    "description": "Check whether the given path points to a regular file.",
+    "parameters": {
+      "path": { "type": "string" }
+    },
+    "returns": { "type": "boolean" }
+  },
+  {
+    "name": "fn_is_directory",
+    "description": "Check whether the given path points to a directory.",
+    "parameters": {
+      "path": { "type": "string" }
+    },
+    "returns": { "type": "boolean" }
+  },
+  {
+    "name": "fn_is_readable",
+    "description": "Check whether the current user can read the file or directory at the given path.",
+    "parameters": {
+      "path": { "type": "string" }
+    },
+    "returns": { "type": "boolean" }
+  },
+  {
+    "name": "fn_is_writable",
+    "description": "Check whether the current user can write to the file or directory at the given path.",
+    "parameters": {
+      "path": { "type": "string" }
+    },
+    "returns": { "type": "boolean" }
+  },
+  {
+    "name": "fn_can_create_file_in_directory",
+    "description": "Check whether the current user has write and execute permission on a directory, which is required to create files inside it.",
+    "parameters": {
+      "directory": { "type": "string" }
+    },
+    "returns": { "type": "boolean" }
+  },
+  {
+    "name": "fn_get_file_size",
+    "description": "Return the size of a file in bytes.",
+    "parameters": {
+      "path": { "type": "string" }
+    },
+    "returns": { "type": "number" }
+  },
+  {
+    "name": "fn_get_modified_time",
+    "description": "Return the last modification time of a file or directory as a Unix timestamp in seconds.",
+    "parameters": {
+      "path": { "type": "string" }
+    },
+    "returns": { "type": "number" }
+  },
+  {
+    "name": "fn_get_permissions",
+    "description": "Return the permission string of a file or directory, for example 'rw-r--r--'.",
+    "parameters": {
+      "path": { "type": "string" }
+    },
+    "returns": { "type": "string" }
+  },
+  {
+    "name": "fn_set_permissions",
+    "description": "Set the permission mode of a file or directory using a numeric mode such as 420 (octal 644). Return true on success.",
+    "parameters": {
+      "path": { "type": "string" },
+      "mode": { "type": "number" }
+    },
+    "returns": { "type": "boolean" }
+  },
+  {
+    "name": "fn_read_text_file",
+    "description": "Read the entire contents of a text file and return it as a string.",
+    "parameters": {
+      "path": { "type": "string" },
+      "encoding": { "type": "string" }
+    },
+    "returns": { "type": "string" }
+  },
+  {
+    "name": "fn_write_text_file",
+    "description": "Write text to a file. If append is true, add to the end of the file instead of overwriting it. Return true on success.",
+    "parameters": {
+      "path": { "type": "string" },
+      "content": { "type": "string" },
+      "append": { "type": "boolean" }
+    },
+    "returns": { "type": "boolean" }
+  },
+  {
+    "name": "fn_create_directory",
+    "description": "Create a directory. If parents is true, create any missing parent directories as well. Return true on success.",
+    "parameters": {
+      "path": { "type": "string" },
+      "parents": { "type": "boolean" }
+    },
+    "returns": { "type": "boolean" }
+  },
+  {
+    "name": "fn_delete_file",
+    "description": "Delete a single file. Return true if the file was deleted.",
+    "parameters": {
+      "path": { "type": "string" }
+    },
+    "returns": { "type": "boolean" }
+  },
+  {
+    "name": "fn_delete_directory",
+    "description": "Delete a directory. If recursive is true, delete all of its contents as well; otherwise the directory must be empty. Return true on success.",
+    "parameters": {
+      "path": { "type": "string" },
+      "recursive": { "type": "boolean" }
+    },
+    "returns": { "type": "boolean" }
+  },
+  {
+    "name": "fn_copy_file",
+    "description": "Copy a file to a new location. If overwrite is false and the destination exists, the copy fails. Return true on success.",
+    "parameters": {
+      "source": { "type": "string" },
+      "destination": { "type": "string" },
+      "overwrite": { "type": "boolean" }
+    },
+    "returns": { "type": "boolean" }
+  },
+  {
+    "name": "fn_move_path",
+    "description": "Move or rename a file or directory to a new location. Return true on success.",
+    "parameters": {
+      "source": { "type": "string" },
+      "destination": { "type": "string" }
+    },
+    "returns": { "type": "boolean" }
+  },
+  {
+    "name": "fn_list_directory",
+    "description": "List the entries in a directory that match a glob pattern (use '*' for all). Return the entry names as a single string separated by newline characters.",
+    "parameters": {
+      "path": { "type": "string" },
+      "pattern": { "type": "string" },
+      "recursive": { "type": "boolean" }
+    },
+    "returns": { "type": "string" }
+  },
+  {
+    "name": "fn_count_files",
+    "description": "Count the files in a directory. If recursive is true, include files in all subdirectories.",
+    "parameters": {
+      "path": { "type": "string" },
+      "recursive": { "type": "boolean" }
+    },
+    "returns": { "type": "number" }
+  },
+  {
+    "name": "fn_get_file_extension",
+    "description": "Return the extension of a file name including the leading dot, for example '.txt'. Return an empty string if there is none.",
+    "parameters": {
+      "path": { "type": "string" }
+    },
+    "returns": { "type": "string" }
+  },
+  {
+    "name": "fn_join_paths",
+    "description": "Join two path segments into a single path using the correct separator for the operating system.",
+    "parameters": {
+      "base": { "type": "string" },
+      "segment": { "type": "string" }
+    },
+    "returns": { "type": "string" }
+  },
+  {
+    "name": "fn_compute_file_hash",
+    "description": "Compute the hexadecimal hash of a file using the given algorithm, such as 'md5', 'sha1', or 'sha256'.",
+    "parameters": {
+      "path": { "type": "string" },
+      "algorithm": { "type": "string" }
+    },
+    "returns": { "type": "string" }
+  },
+  {
+    "name": "fn_files_are_identical",
+    "description": "Compare the contents of two files byte by byte and return true if they are identical.",
+    "parameters": {
+      "path_a": { "type": "string" },
+      "path_b": { "type": "string" }
+    },
+    "returns": { "type": "boolean" }
+  },
+  {
+    "name": "fn_get_current_directory",
+    "description": "Return the absolute path of the current working directory.",
+    "parameters": {},
+    "returns": { "type": "string" }
+  },
+  {
+    "name": "fn_change_directory",
+    "description": "Change the current working directory. Return true on success.",
+    "parameters": {
+      "path": { "type": "string" }
+    },
+    "returns": { "type": "boolean" }
+  }
+]

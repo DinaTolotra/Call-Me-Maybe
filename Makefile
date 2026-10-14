@@ -19,7 +19,7 @@ refresh: .venv
 run:
 	@echo " + Launching the project..."
 	@echo "   - Initializing env var"
-	@uv run python3.13 -m src
+	@uv run python3.13 -m src -input data/input/request_1.json -functions_definition data/input/function_1.json
 
 debug:
 	@echo " + Debugging the project..."
