@@ -3,6 +3,11 @@ export HF_HOME=.hf_cache
 export HF_HUB_OFFLINE=0
 export PYTHONPATH=.
 
+FN_DEF_FILE :=
+INPUT_FILE := data/input/request_1.json
+OUTPUT_FILE := data/output/output_1.json
+ARG := -input $(INPUT_FILE) -output $(OUTPUT_FILE) -functions_definition $(FN_DEF_FILE)
+
 install:
 	@echo " + Installing dependencies..."
 	@echo "   - Installing python3.13"
@@ -19,11 +24,11 @@ refresh: .venv
 run:
 	@echo " + Launching the project..."
 	@echo "   - Initializing env var"
-	@uv run python3.13 -m src -input data/input/request_1.json -functions_definition data/input/function_1.json
+	@uv run python3.13 -m src $(ARG)
 
 debug:
 	@echo " + Debugging the project..."
-	@uv run python3.13 -m pdb -m src
+	@uv run python3.13 -m pdb -m src $(ARG)
 
 clean:
 	@echo " + Cleaning the project..."
@@ -38,6 +43,11 @@ clean:
 	\) -prune -exec rm -rf {} +
 	@find . -type f \( -name "*.pyc" -o -name "*.pyo" \) -delete
 
+fclean: clean
+	@echo " + Full cleaning..."
+	@rm -rf .venv
+	@rm -rf .hf_cache
+
 lint:
 	@echo " + Checking norme..."
 	@uv run python -m flake8 . --exclude=.venv,llm_sdk
@@ -49,3 +59,5 @@ lint-strict:
 	@uv run python -m flake8 . --exclude=.venv,llm_sdk
 	@echo " + Checking type hint..."
 	@uv run python -m mypy src --strict --explicit-package-bases
+
+.PHONY: install rehresh run debug clean fclean lint lint-strict

@@ -1,24 +1,27 @@
-def parse(argv: list[str]) -> tuple[str, str, str]:
-    fn_def_file = "data/input/functions_definition.json"
-    input_file = "data/input/function_calling_tests.json"
-    output_file = "data/output/function_calling_results.json"
+def usage() -> None:
+    print(
+        "Usage: uv run python -m src",
+        "[-functions_definition <function_definition_file>]",
+        "[-input <input_file>] [-output <output_file>]"
+    )
 
-    i = 1
-    while len(argv) < 7 and i < len(argv) - 1:
-        if argv[i] == "-functions_definition":
-            fn_def_file = argv[i + 1]
-            i += 2
-        elif argv[i] == "-input":
-            input_file = argv[i + 1]
-            i += 2
-        elif argv[i] == "-output":
-            output_file = argv[i + 1]
-            i += 2
+
+def parse(argv: list[str]) -> tuple[str, str, str]:
+    data: dict[str, str] = {
+        "-input": "data/input/function_calling_tests.json",
+        "-output": "data/output/function_calling_results.json",
+        "-functions_definition": "data/input/functions_definition.json"
+    }
+    argv = argv[1:].copy()
+
+    while len(argv) > 0:
+        if argv[0] in data.keys():
+            if len(argv) > 1:
+                data[argv[0]] = argv[1]
+                argv.pop(0)
+            else:
+                data[argv[0]] = ""
+            argv.pop(0)
         else:
-            print(
-                "Usage: uv run python -m src",
-                "[-functions_definition <function_definition_file>]",
-                "[-input <input_file>] [-output <output_file>]"
-            )
             break
-    return (fn_def_file, input_file, output_file)
+    return (data["-input"], data["-output"], data["-functions_definition"])
