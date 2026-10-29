@@ -1,12 +1,12 @@
 from time import perf_counter
-from sys import argv, stderr
+from sys import argv
 
 from src.llm_model import Model
 from src.model import Template
 from src.model import Prompt
 from src.model import FnDef
 from src.model import Result
-from src.parser import parse
+from src.parser import parse, usage
 import src.factory as fct
 import src.utils as utils
 import src.logging as logging
@@ -115,53 +115,80 @@ def run_request(
     return result
 
 
-def main() -> None:
-    model = Model()
-    fn_def_file, input_file, output_file = parse(argv)
-    logging.print_arg(fn_def_file, input_file, output_file)
-    fn_def_file, input_file, output_file = parse(argv)
-    logging.print_arg(fn_def_file, input_file, output_file)
+def main() -> int:
+    try:
+        fn_def_file, input_file, output_file = parse(argv)
+    except ValueError as error:
+        logging.print_error("Invalid command line", error)
+        logging.print_usage(usage())
+        return 2
 
+    logging.print_arg(fn_def_file, input_file, output_file)
     if not utils.check_input_file(fn_def_file, input_file):
-        print("Error: Invalid input file", file=stderr)
-        return
-    elif not utils.check_output_file(output_file, (fn_def_file, input_file)):
-        print("Error: Invalid output file", file=stderr)
-        return
+        logging.print_error("Function definitions or request input is unreadable")
+        return 2
+    if not utils.check_output_file(output_file, (fn_def_file, input_file)):
+        logging.print_error("Output path is not writable or conflicts with an input")
+        return 2
 
-    request_list = Prompt.parse_json(input_file)
-    fn_list = FnDef.parse_json(fn_def_file)
-    template_dict = Template.parse_json("data/template/prompt.json")
+    try:
+        request_list = Prompt.parse_json(input_file)
+        fn_list = FnDef.parse_json(fn_def_file)
+        template_dict = Template.parse_json("data/template/prompt.json")
+    except (OSError, ValueError) as error:
+        logging.print_error("Could not read or validate JSON data", error)
+        return 2
+
+    if not {"function_name", "argument_value"}.issubset(template_dict):
+        logging.print_error("Prompt template is missing required entries")
+        return 2
+    if not fn_list or not request_list:
+        logging.print_error("Function definitions and requests must not be empty")
+        return 2
+
+    try:
+        model = Model()
+    except Exception as error:
+        logging.print_error("Could not initialize the model", error)
+        return 1
+
     result_list: list[Result] = []
-
-    if len(template_dict) == 0:
-        return
-    if len(fn_list) == 0:
-        return
-    if len(request_list) == 0:
-        return
-
     total_duration = 0.0
-    for request in request_list:
+    skipped = 0
+    failed = 0
+    for index, request in enumerate(request_list, start=1):
+        start = perf_counter()
         try:
-            start = perf_counter()
             result = run_request(model, request, fn_list, template_dict)
             elapsed = perf_counter() - start
             total_duration += elapsed
+            logging.print_request_duration(index, elapsed)
             if result.name is None:
+                skipped += 1
                 continue
             logging.print_result(result)
             result_list.append(result)
-            print(f"   - Duration\t {elapsed:.2f}s")
         except Exception as error:
-            print("Error:", error, file=stderr)
-            return
-    print(f" + Total infering\t {total_duration:.2f}s")
-    Result.save_list(result_list, output_file)
+            elapsed = perf_counter() - start
+            total_duration += elapsed
+            failed += 1
+            logging.print_error(f"Request {index} failed", error)
+
+    logging.print_summary(
+        len(result_list), skipped, failed, total_duration
+    )
+    try:
+        Result.save_list(result_list, output_file)
+    except (OSError, ValueError) as error:
+        logging.print_error("Could not save result file", error)
+        return 1
+    logging.print_output_saved(output_file)
+    return 1 if failed else 0
 
 
 if __name__ == "__main__":
     start = perf_counter()
-    main()
+    exit_code = main()
     duration = perf_counter() - start
-    print(f" + Total program\t {duration:.2f}s")
+    logging.print_program_duration(duration)
+    raise SystemExit(exit_code)

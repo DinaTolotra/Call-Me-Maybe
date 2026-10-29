@@ -1,9 +1,9 @@
-def usage() -> None:
-    print(
+def usage() -> str:
+    return " ".join((
         "Usage: uv run python -m src",
         "[-functions_definition <function_definition_file>]",
         "[-input <input_file>] [-output <output_file>]"
-    )
+    ))
 
 
 def parse(argv: list[str]) -> tuple[str, str, str]:
@@ -15,13 +15,10 @@ def parse(argv: list[str]) -> tuple[str, str, str]:
     argv = argv[1:].copy()
 
     while len(argv) > 0:
-        if argv[0] in data.keys():
-            if len(argv) > 1:
-                data[argv[0]] = argv[1]
-                argv.pop(0)
-            else:
-                data[argv[0]] = ""
-            argv.pop(0)
-        else:
-            break
+        option = argv.pop(0)
+        if option not in data:
+            raise ValueError(f"Unknown option: {option}")
+        if not argv:
+            raise ValueError(f"Missing value for option: {option}")
+        data[option] = argv.pop(0)
     return (data["-input"], data["-output"], data["-functions_definition"])
