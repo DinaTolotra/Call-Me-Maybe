@@ -1,14 +1,29 @@
-from typing import Annotated, Optional
+from pathlib import Path
+from tempfile import NamedTemporaryFile
+from typing import Annotated, Any, Literal, Optional
 import pydantic as pd
 
 
+MAX_JSON_BYTES = 2_000_000
+
+
+def _read_json(file: str, adapter: pd.TypeAdapter[Any]) -> Any:
+    with open(file, mode="rb") as source:
+        content = source.read(MAX_JSON_BYTES + 1)
+    if len(content) > MAX_JSON_BYTES:
+        raise ValueError("JSON input exceeds the maximum size")
+    return adapter.validate_json(content)
+
+
 class FnDef(pd.BaseModel):
+    model_config = pd.ConfigDict(extra="forbid", strict=True)
+
     name: Annotated[
         str,
         pd.Field(min_length=3, pattern=r"^[a-zA-Z_][a-zA-Z0-9_]*$")
     ]
     description: Annotated[
-        str, pd.Field(min_length=1)
+        str, pd.Field(min_length=1, max_length=4096)
     ]
     parameters: Annotated[
         dict[
@@ -16,13 +31,16 @@ class FnDef(pd.BaseModel):
                 str,
                 pd.Field(min_length=1, pattern=r"^[a-zA-Z_][a-zA-Z0-9_]*$")
             ],
-            dict[str, str]
+            Annotated[
+                dict[Literal["type"], Literal["string", "number", "boolean"]],
+                pd.Field(min_length=1, max_length=1)
+            ]
         ],
-        pd.Field()
+        pd.Field(max_length=64)
     ]
     returns: Annotated[
-        dict[str, str],
-        pd.Field(max_length=1)
+        dict[Literal["type"], Literal["string", "number", "boolean"]],
+        pd.Field(min_length=1, max_length=1)
     ]
 
     def __str__(self) -> str:
@@ -34,51 +52,42 @@ class FnDef(pd.BaseModel):
 
     @staticmethod
     def parse_json(file: str) -> list["FnDef"]:
-        try:
-            with open(file, mode="r") as f:
-                adapter = pd.TypeAdapter(list[FnDef])
-                return adapter.validate_json(f.read())
-        except pd.ValidationError as error:
-            print("ERROR: ", error)
-        except Exception as error:
-            print("ERROR: ", error)
-        return []
+        adapter = pd.TypeAdapter(
+            Annotated[list[FnDef], pd.Field(max_length=256)]
+        )
+        return _read_json(file, adapter)
 
 
 class Prompt(pd.BaseModel):
-    prompt: Annotated[str, pd.Field(min_length=1)]
+    model_config = pd.ConfigDict(extra="forbid", strict=True)
+
+    prompt: Annotated[str, pd.Field(min_length=1, max_length=16_384)]
 
     @staticmethod
     def parse_json(file: str) -> list["Prompt"]:
-        try:
-            with open(file, mode="r") as f:
-                adapter = pd.TypeAdapter(list[Prompt])
-                return adapter.validate_json(f.read())
-        except pd.ValidationError as error:
-            print("ERROR: ", error)
-        except Exception as error:
-            print("ERROR: ", error)
-        return []
+        adapter = pd.TypeAdapter(
+            Annotated[list[Prompt], pd.Field(max_length=1000)]
+        )
+        return _read_json(file, adapter)
 
 
 class Template(pd.BaseModel):
+    model_config = pd.ConfigDict(extra="forbid", strict=True)
+
     name: Annotated[str, pd.Field(min_length=1)]
-    value: Annotated[str, pd.Field(min_length=1)]
+    value: Annotated[str, pd.Field(min_length=1, max_length=16_384)]
 
     @staticmethod
     def parse_json(file: str) -> dict[str, "Template"]:
-        try:
-            with open(file, mode="r") as f:
-                adapter = pd.TypeAdapter(dict[str, Template])
-                return adapter.validate_json(f.read())
-        except pd.ValidationError as error:
-            print("ERROR: ", error)
-        except Exception as error:
-            print("ERROR: ", error)
-        return {}
+        adapter = pd.TypeAdapter(
+            Annotated[dict[str, Template], pd.Field(max_length=32)]
+        )
+        return _read_json(file, adapter)
 
 
 class Result(pd.BaseModel):
+    model_config = pd.ConfigDict(extra="forbid", strict=True)
+
     prompt: Annotated[str, pd.Field(min_length=1)]
     name: Annotated[
         Optional[str],
@@ -92,6 +101,17 @@ class Result(pd.BaseModel):
     @staticmethod
     def save_list(result_list: list["Result"], file: str) -> None:
         adapter = pd.TypeAdapter(list[Result])
-        json_str = adapter.dump_json(result_list, indent=4).decode()
-        with open(file, "w") as f:
-            f.write(json_str)
+        payload = adapter.dump_json(result_list, indent=4)
+        destination = Path(file)
+        temporary_path: str | None = None
+        try:
+            with NamedTemporaryFile(
+                    mode="wb", dir=destination.parent, delete=False
+                    ) as temporary:
+                temporary_path = temporary.name
+                temporary.write(payload)
+                temporary.flush()
+            Path(temporary_path).replace(destination)
+        finally:
+            if temporary_path is not None:
+                Path(temporary_path).unlink(missing_ok=True)

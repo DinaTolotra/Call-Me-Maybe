@@ -1,5 +1,6 @@
 from string import digits
 from functools import cache
+from typing import Literal
 
 from src.llm_model import Model
 from src.model import FnDef, Prompt
@@ -162,7 +163,7 @@ class ArgExtractionPromptFactory:
             description: str,
             instruction: Prompt,
             arg_val: dict[str, str | float],
-            param_list: dict[str, dict[str, str]]
+            param_list: dict[str, dict[Literal["type"], Literal["string", "number", "boolean"]]]
             ) -> None:
         self._template = template
         self.fn_name = fn_name

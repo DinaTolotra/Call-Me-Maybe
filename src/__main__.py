@@ -117,14 +117,15 @@ def run_request(
 
 def main() -> None:
     model = Model()
-
+    fn_def_file, input_file, output_file = parse(argv)
+    logging.print_arg(fn_def_file, input_file, output_file)
     fn_def_file, input_file, output_file = parse(argv)
     logging.print_arg(fn_def_file, input_file, output_file)
 
     if not utils.check_input_file(fn_def_file, input_file):
         print("Error: Invalid input file", file=stderr)
         return
-    elif not utils.check_output_file(output_file):
+    elif not utils.check_output_file(output_file, (fn_def_file, input_file)):
         print("Error: Invalid output file", file=stderr)
         return
 

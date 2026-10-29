@@ -1,4 +1,4 @@
-from os.path import dirname, exists, isdir, isfile
+from pathlib import Path
 from os import access, R_OK, W_OK, X_OK
 from typing import Generator, Any
 from sys import float_info
@@ -51,23 +51,33 @@ def batched(
 
 def check_input_file(fn_def_file: str, input_file: str) -> bool:
     return (
-        exists(fn_def_file) and isfile(fn_def_file) and
-        exists(input_file) and isfile(input_file) and
+        Path(fn_def_file).is_file() and
+        Path(input_file).is_file() and
         access(fn_def_file, R_OK) and access(input_file, R_OK)
     )
 
 
-def check_output_file(output_file: str) -> bool:
-    return (
-        (
-            not exists(output_file) or
-            access(output_file, W_OK)
-        ) and
-        exists(dirname(output_file)) and
-        isdir(dirname(output_file)) and
-        not isdir(output_file) and
-        access(dirname(output_file), X_OK | W_OK)
-    )
+def check_output_file(
+        output_file: str,
+        protected_files: tuple[str, ...] = ()
+        ) -> bool:
+    try:
+        path = Path(output_file)
+        if not output_file or path.is_symlink() or path.is_dir():
+            return False
+        if any(
+                path.resolve() == Path(file).resolve()
+                for file in protected_files
+                ):
+            return False
+        parent = path.parent
+        return (
+            parent.is_dir() and
+            access(parent, X_OK | W_OK) and
+            (not path.exists() or (path.is_file() and access(path, W_OK)))
+        )
+    except (OSError, RuntimeError):
+        return False
 
 
 def clean(s: str) -> str:
