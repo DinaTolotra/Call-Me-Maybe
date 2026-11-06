@@ -24,11 +24,15 @@ def get_function_in_batch(
     grammar = fct.GrammarFactory.create_fn_name_grammar(model, fn_batch)
     factory = fct.FunctionPromptFactory(template, request, fn_batch)
     prompt_token = model.encode(factory.prompt)
-    while not grammar.has_ended:
+    while not grammar.has_ended and not grammar.limit_reached:
         logit = model.infer(prompt_token + grammar.result)
         proba = utils.filter_proba(utils.softmax(logit), grammar.token)
         token, _ = utils.index_sort(proba, 1)[0]
         grammar.consume(token)
+    if not grammar.has_ended:
+        raise RuntimeError(
+            f"Function selection exceeded the {grammar.max_tokens}-token limit"
+        )
     fn = fn_dict.get(model.decode(grammar.result))
     return fn
 
@@ -78,11 +82,15 @@ def extract_argument(
         else:
             grammar = fct.GrammarFactory.create_string_grammar(model)
         prompt_token = model.encode(factory.prompt)
-        while not grammar.has_ended:
+        while not grammar.has_ended and not grammar.limit_reached:
             logit = model.infer(prompt_token + grammar.result)
             proba = utils.filter_proba(utils.softmax(logit), grammar.token)
             token, _ = utils.index_sort(proba, 1)[0]
             grammar.consume(token)
+        if not grammar.has_ended:
+            raise RuntimeError(
+                f"Argument extraction exceeded the {grammar.max_tokens}-token limit"
+            )
         val = utils.clean(model.decode(grammar.result))
         if fn.parameters[arg]["type"] == "number":
             val = float(val)
@@ -117,7 +125,7 @@ def run_request(
 
 def main() -> int:
     try:
-        fn_def_file, input_file, output_file = parse(argv)
+        input_file, output_file, fn_def_file = parse(argv)
     except ValueError as error:
         logging.print_error("Invalid command line", error)
         logging.print_usage(usage())

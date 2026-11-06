@@ -8,9 +8,9 @@ def usage() -> str:
 
 def parse(argv: list[str]) -> tuple[str, str, str]:
     data: dict[str, str] = {
-        "-input": "data/input/function_calling_tests.json",
-        "-output": "data/output/function_calling_results.json",
-        "-functions_definition": "data/input/functions_definition.json"
+        "--input": "data/input/function_calling_tests.json",
+        "--output": "data/output/function_calling_results.json",
+        "--functions_definition": "data/input/functions_definition.json"
     }
     argv = argv[1:].copy()
 

@@ -54,12 +54,17 @@ class Grammar:
             self,
             transition_table: TransitionTable,
             initial_state: State,
-            final_state: State
+            final_state: State,
+            max_tokens: int = 128
             ) -> None:
+        if max_tokens < 1:
+            raise ValueError("max_tokens must be greater than zero")
         self._table = transition_table
         self._state = initial_state
         self._final_state = final_state
         self._result = list[int]()
+        self._max_tokens = max_tokens
+        self._token_count = 0
 
     @property
     def result(self) -> list[int]:
@@ -77,7 +82,18 @@ class Grammar:
     def has_ended(self) -> bool:
         return self.state == self._final_state
 
+    @property
+    def max_tokens(self) -> int:
+        return self._max_tokens
+
+    @property
+    def limit_reached(self) -> bool:
+        return self._token_count >= self._max_tokens
+
     def consume(self, token: int) -> bool:
+        if self.limit_reached:
+            return False
+        self._token_count += 1
         if token in self._table.get_allowed_token(self._state):
             state = self._table.get_dst(self.state, token)
             self._state = state if state else self._final_state
