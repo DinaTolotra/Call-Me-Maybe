@@ -12,6 +12,8 @@ state = {
     "generating": fsm.State("generating"),
     "sign": fsm.State("sign"),
     "digit": fsm.State("digit"),
+    "decimal": fsm.State("decimal"),
+    "fraction_digit": fsm.State("fraction_digit"),
     "opening_quote": fsm.State("opening_quote"),
     "closing_quote": fsm.State("closing_quote"),
     "non-quote": fsm.State("non-quote"),
@@ -58,15 +60,51 @@ class TransitionTableFactory:
         for d in digits:
             token = model.encode(d)
             digit_token.extend(token)
+        digit_tokens = set(digit_token)
+        table.add_transition(
+            state["sign"],
+            state["digit"],
+            digit_tokens
+        )
         table.add_transition(
             state["digit"],
             state["digit"],
-            set(digit_token)
+            digit_tokens
+        )
+        table.add_transition(
+            state["digit"],
+            state["decimal"],
+            set(model.encode("."))
         )
         table.add_transition(
             state["digit"],
             state["stoping"],
             set(model.encode(";"))
+        )
+        table.add_transition(
+            state["decimal"],
+            state["fraction_digit"],
+            digit_tokens
+        )
+        table.add_transition(
+            state["fraction_digit"],
+            state["fraction_digit"],
+            digit_tokens
+        )
+        table.add_transition(
+            state["fraction_digit"],
+            state["stoping"],
+            set(model.encode(";"))
+        )
+        table.add_transition(
+            state["generating"],
+            state["sign"],
+            set(model.encode("-"))
+        )
+        table.add_transition(
+            state["generating"],
+            state["digit"],
+            digit_tokens
         )
         return table
 
@@ -102,21 +140,27 @@ class TransitionTableFactory:
     @cache
     def create_boolean_table(cls, model: Model) -> fsm.TransitionTable:
         table = fsm.TransitionTable()
-
-        semicolon = tuple(model.encode(";"))
-        sequences = set[int]()
-        for literal in ("true", "false", "True", "False"):
-            sequences = sequences.union(
-                model.encode(literal + ";"),
-                model.encode(literal),
-                semicolon
-            )
-
-        table.add_transition(
-            state["boolean_start"],
-            state["boolean_end"],
-            sequences
-        )
+        prefix_states: dict[tuple[int, ...], fsm.State] = {}
+        sequences = {
+            tuple(model.encode(literal + ";"))
+            for literal in ("true", "false")
+        }
+        for sequence in sequences:
+            prefix: tuple[int, ...] = ()
+            source = state["boolean_start"]
+            for index, token in enumerate(sequence):
+                prefix += (token,)
+                if index == len(sequence) - 1:
+                    destination = state["boolean_end"]
+                else:
+                    destination = prefix_states.get(prefix)
+                    if destination is None:
+                        destination = fsm.State(
+                            f"boolean_prefix_{len(prefix_states)}"
+                        )
+                        prefix_states[prefix] = destination
+                table.add_transition(source, destination, {token})
+                source = destination
         return table
 
 
@@ -136,7 +180,7 @@ class GrammarFactory:
     def create_number_grammar(cls, model: Model) -> fsm.Grammar:
         return fsm.Grammar(
             TransitionTableFactory.create_number_table(model),
-            state["digit"], state["stoping"]
+            state["generating"], state["stoping"]
         )
 
     @classmethod
@@ -162,7 +206,7 @@ class ArgExtractionPromptFactory:
             param_name: str,
             description: str,
             instruction: Prompt,
-            arg_val: dict[str, str | float],
+            arg_val: dict[str, str | float | bool],
             param_list: dict[str, dict[Literal["type"], Literal["string", "number", "boolean"]]]
             ) -> None:
         self._template = template

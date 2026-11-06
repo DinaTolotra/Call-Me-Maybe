@@ -65,9 +65,9 @@ def extract_argument(
         request: Prompt,
         fn: FnDef,
         template: Template
-        ) -> dict[str, str | float]:
-    arg_val: dict[str, str | float] = {}
-    val: str | float = ""
+        ) -> dict[str, str | float | bool]:
+    arg_val: dict[str, str | float | bool] = {}
+    val: str | float | bool = ""
     for arg in fn.parameters:
         factory = fct.ArgExtractionPromptFactory(
             template.value, fn_name=fn.name,
@@ -94,6 +94,10 @@ def extract_argument(
         val = utils.clean(model.decode(grammar.result))
         if fn.parameters[arg]["type"] == "number":
             val = float(val)
+        elif fn.parameters[arg]["type"] == "boolean":
+            if val not in ("true", "false"):
+                raise ValueError("Boolean extraction produced an invalid literal")
+            val = val == "true"
         arg_val[arg] = val
     return arg_val
 

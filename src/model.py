@@ -93,9 +93,9 @@ class Result(pd.BaseModel):
         Optional[str],
         pd.Field(min_length=3, pattern=r"^[a-zA-Z_][a-zA-Z0-9_]*$")
     ]
-    parameters: Annotated[dict[str, str | float], pd.Field()]
+    parameters: Annotated[dict[str, str | float | bool], pd.Field()]
 
-    def add_parameter(self, name: str, value: str) -> None:
+    def add_parameter(self, name: str, value: str | float | bool) -> None:
         self.parameters[name] = value
 
     @staticmethod
