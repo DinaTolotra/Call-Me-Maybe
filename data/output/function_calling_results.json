@@ -1,9 +1,1 @@
-[
-    {
-        "prompt": "Does the file /home/user/notes.txt exist?",
-        "name": "fn_path_exists",
-        "parameters": {
-            "path": "/home/user/notes.txt"
-        }
-    }
-]
+[]

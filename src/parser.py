@@ -21,4 +21,4 @@ def parse(argv: list[str]) -> tuple[str, str, str]:
         if not argv:
             raise ValueError(f"Missing value for option: {option}")
         data[option] = argv.pop(0)
-    return (data["-input"], data["-output"], data["-functions_definition"])
+    return (data["--input"], data["--output"], data["--functions_definition"])

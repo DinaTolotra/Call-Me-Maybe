@@ -2,8 +2,11 @@ import llm_sdk.llm_sdk as sdk
 
 
 class Model:
-    def __init__(self) -> None:
-        self._model: sdk.Small_LLM_Model = sdk.Small_LLM_Model()
+    def __init__(self, model_name: str | None = None) -> None:
+        if model_name:
+            self._model: sdk.Small_LLM_Model = sdk.Small_LLM_Model(model_name)
+        else:
+            self._model: sdk.Small_LLM_Model = sdk.Small_LLM_Model()
         self._vocab_file: str = self._model.get_path_to_vocab_file()
         self._merge_file: str = self._model.get_path_to_merges_file()
         self._tokenizer_file: str = self._model.get_path_to_tokenizer_file()
