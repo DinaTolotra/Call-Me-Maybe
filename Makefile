@@ -4,8 +4,8 @@ export HF_HUB_OFFLINE=0
 export PYTHONPATH=.
 
 FN_DEF_FILE :=
-INPUT_FILE := data/input/request_1.json
-OUTPUT_FILE := data/output/output_1.json
+INPUT_FILE :=
+OUTPUT_FILE :=
 ARG := --input $(INPUT_FILE) --output $(OUTPUT_FILE) --functions_definition $(FN_DEF_FILE)
 
 install:

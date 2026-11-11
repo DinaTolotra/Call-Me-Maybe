@@ -40,7 +40,7 @@ class FnDef(pd.BaseModel):
     ]
     returns: Annotated[
         dict[Literal["type"], Literal["string", "number", "boolean"]],
-        pd.Field(min_length=1, max_length=1)
+        pd.Field(min_length=0, max_length=2)
     ]
 
     def __str__(self) -> str:
